@@ -23,7 +23,6 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getUsers = getUsers;
 const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = parseInt(req.params.id);
-    console.log(req.params.id);
     const userWanted = yield (0, userServices_1.getUserByIdService)(userId);
     res.status(201).json({ message: "Usuario Encontrado", userWanted: userWanted });
 });

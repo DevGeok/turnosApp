@@ -1,11 +1,14 @@
 import IUser from "../Interfaces/IUser";
 import UserDto from "../dto/UserDto";
+import { createCredentialsService } from "./credentialServices";
 
-const users: IUser[] = [{
+export const users: IUser[] = [{
   id:1,
   name:"Jorge V",
   email: "jorge@mail.com",
-  active: true
+  birthdate: new Date("1988/08/04"),
+  nDni: 1065597444,
+  credentialsId:10
 }
 ];
 
@@ -17,8 +20,11 @@ export const createUserService = async (userData: UserDto):Promise<IUser> => {
     id,
     name: userData.name,
     email: userData.email,
-    active:userData.active,
+    birthdate:userData.birthdate,
+    nDni: userData.nDni,
+    credentialsId: await createCredentialsService(userData.userName,userData.password),
   };
+
   users.push(newUser);
   id++;
   return newUser;

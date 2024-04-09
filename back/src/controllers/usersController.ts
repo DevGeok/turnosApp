@@ -1,6 +1,7 @@
 import { getUsersService, createUserService, getUserByIdService } from "../services/userServices";
 import { Request, Response } from "express";
 import IUser from "../Interfaces/IUser";
+import { verifyUserCredentials } from "../services/credentialServices";
 
 
 export const createUser = async (req:Request , res:Response) => {
@@ -15,12 +16,15 @@ export const getUsers = async (req:Request , res:Response) => {
 
 export const getUserById = async (req:Request , res:Response) => {
   const userId:number = parseInt(req.params.id);
-  console.log(req.params.id);
-
   const userWanted:IUser | undefined = await getUserByIdService(userId);
   res.status(201).json({message:"Usuario Encontrado", userWanted:userWanted});
 };
 
 export const userLogin = async (req:Request , res:Response) => {
-  res.status(201).json({message:"Inicio de sesión Exitosa"});
+  const credentialsID: number | undefined = await verifyUserCredentials(req.body.userName, req.body.password);
+  if (credentialsID === undefined)
+    res.status(201).json({message:"Inicio de sesión Fallido, el usuario no existo o la contraseña es incorrecta"});
+  if (typeof credentialsID === "number")
+    res.status(201).json({message:"Inicio de sesión Exitosa"});
 };
+
