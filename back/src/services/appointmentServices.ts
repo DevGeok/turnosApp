@@ -1,43 +1,58 @@
 import IAppointment from "../Interfaces/IAppointment";
+import { appointmentEntity, userEntity } from "../config/data-source";
 import AppointmentDto from "../dto/AppointmentDto";
 import UserDto from "../dto/UserDto";
+import { Appointment, AppointmentStatus } from "../entities/Appointment";
+import { User } from "../entities/User";
+import { httpError } from "../utils/httpError";
 import { createCredentialsService } from "./credentialServices";
-
-export const appointments: IAppointment[] = [{
-  id:1,
-  date: new Date("2024/05/01"),
-  time: "10:00",
-  status: "active",
-  userId: 1
-}
-];
-
-let id: number = 2;
+import { getUserByIdService } from "./userServices";
 
 
-export const getAppointmentsService = async ():Promise<IAppointment[]> => {
-  return appointments;
+
+const id: number = 2;
+
+export const getAppointmentsService = async ():Promise<Appointment[]> => {
+  const appointments: Appointment[] = await appointmentEntity.find();
+  if (appointments.length > 0) return appointments;
+  throw new httpError("No se encontraron appointments", 404);
 };
 
-export const getAppointmentsByIdService = async (id:number):Promise<IAppointment | undefined> => {
-  const appointmentWanted: IAppointment | undefined = appointments.find((appointment: IAppointment) => appointment.id === id);
-  return appointmentWanted;
+export const getAppointmentsByIdService = async (id:number):Promise<Appointment> => {
+
+  const verifyAppointmentID: Appointment | null = await appointmentEntity.findOne({
+    where:{id:id}
+  });
+  if (verifyAppointmentID) return verifyAppointmentID;
+  else throw new httpError("No existe un appointment con este id",404);
+
 };
 
-export const createAppointmentService = async (appointmentData: AppointmentDto):Promise<IAppointment> => {
-  const newAppointment: IAppointment = {
-    id,
-    date: appointmentData.date,
+export const createAppointmentService = async (appointmentData: AppointmentDto):Promise<Appointment|undefined> => {
+
+  const user: User =  await getUserByIdService(appointmentData.userId);
+
+  const addAppointment =  {
+    date: new Date(appointmentData.date),
     time: appointmentData.time,
-    status: "active",
-    userId: appointmentData.userId
+    status: AppointmentStatus.Active,
+    user: user
   };
-  appointments.push(newAppointment);
-  id++;
+  const newAppointment: Appointment = appointmentEntity.create(addAppointment);
+  await appointmentEntity.save(newAppointment);
   return newAppointment;
 };
 
-export const cancelAppointmentService = async (id:number):Promise<void> => {
-  const index: number = appointments.findIndex(appointment => appointment.id === id);
-  appointments[index].status = "cancelled";
+
+
+export const cancelAppointmentService = async (id:number):Promise<Appointment> => {
+  const appointiment = await appointmentEntity.findOne({
+    where:{id:id}
+  });
+  if (!appointiment) throw new httpError ("No existe un appointment con ese id", 404);
+  if (appointiment){
+    appointiment.status = AppointmentStatus.Cancelled;
+    appointmentEntity.save(appointiment);
+  }
+  return appointiment;
 };

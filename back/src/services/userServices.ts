@@ -1,41 +1,38 @@
-import IUser from "../Interfaces/IUser";
+import { AppDataSource, userEntity } from "../config/data-source";
 import UserDto from "../dto/UserDto";
+import { Credential } from "../entities/Credential";
+import { User } from "../entities/User";
+import { httpError } from "../utils/httpError";
 import { createCredentialsService } from "./credentialServices";
 
-export const users: IUser[] = [{
-  id:1,
-  name:"Jorge V",
-  email: "jorge@mail.com",
-  birthdate: new Date("1988/08/04"),
-  nDni: 1065597444,
-  credentialsId:10
-}
-];
 
-let id: number = 2;
 
-export const createUserService = async (userData: UserDto):Promise<IUser> => {
+const id: number = 2;
 
-  const newUser: IUser = {
-    id,
-    name: userData.name,
+export const getUsersService = async ():Promise<User[]> => {
+  const user: User[] = await userEntity.find();
+  return user;
+};
+
+export const getUserByIdService = async (id: number): Promise<User> => {
+  const verifyUser: User | null = await userEntity.findOne({
+    where: { id: id },
+    relations: { appointments: true }
+  });
+  if (verifyUser) return verifyUser;
+  else throw new httpError ("No existe un usuario con este id",404);
+};
+
+export const createUserService = async (userData:UserDto):Promise<User> => {
+  const newCredId:Credential = await createCredentialsService({userName: userData.userName, password:userData.password});
+  const addUser =  {
+    name:userData.name,
     email: userData.email,
-    birthdate:userData.birthdate,
+    birthdate: new Date(userData.birthdate),
     nDni: userData.nDni,
-    credentialsId: await createCredentialsService(userData.userName,userData.password),
+    credentials:newCredId
   };
-
-  users.push(newUser);
-  id++;
+  const newUser: User = await userEntity.create(addUser);
+  await userEntity.save(newUser);
   return newUser;
 };
-
-export const getUsersService = async ():Promise<IUser[]> => {
-  return users;
-};
-
-export const getUserByIdService = async (id:number):Promise<IUser | undefined> => {
-  const userWanted: IUser | undefined = users.find((user: IUser) => user.id === id);
-  return userWanted;
-};
-

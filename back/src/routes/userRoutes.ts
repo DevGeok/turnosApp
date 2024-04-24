@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { createUser, getUsers, getUserById, userLogin } from "../controllers/usersController";
-import auth from "../middlewares/auth";
+import { isUserRepeated } from "../middlewares/isUserRepeated";
+import { checkData } from "../middlewares/checkData";
 
 
 const userRouter: Router = Router();
@@ -8,8 +9,8 @@ const userRouter: Router = Router();
 
 
 userRouter.get("/", getUsers);
-userRouter.get("/user/:id", auth, getUserById);
-userRouter.post("/register", createUser);
+userRouter.get("/user/:id", getUserById);
+userRouter.post("/register", checkData, isUserRepeated, createUser);
 userRouter.post("/login", userLogin);
 
 export default userRouter;

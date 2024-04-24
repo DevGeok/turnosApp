@@ -1,35 +1,26 @@
-import ICredential from "../Interfaces/ICredential";
+import { credentialEntity } from "../config/data-source";
+import CredentialsDto from "../dto/CredentialsDto";
+import { Credential } from "../entities/Credential";
+import { httpError } from "../utils/httpError";
 
-export const credentials: ICredential[] = [{
-  id:10,
-  userName:"admin",
-  password:"admin"
-}
-];
 
-let id: number = 11;
 
-export const createCredentialsService = async (userName: string, password: string):Promise<number> => {
+const id: number = 11;
 
-  const newCredentials: ICredential = {
-    id,
-    userName: userName,
-    password: password,
 
-  };
-  credentials.push(newCredentials);
-  id++;
-  return id - 1;
+export const createCredentialsService = async (credentials:CredentialsDto):Promise<Credential> => {
+
+  await credentialEntity.create(credentials);
+  const result = await credentialEntity.save(credentials);
+
+  return result;
 };
 
-export const verifyUserCredentials = async (userName:string, password:string):Promise<number | undefined> => {
-  const credentialsWanted: ICredential | undefined = credentials.find((credentials: ICredential) => credentials.userName === userName);
+export const verifyUserCredentials = async (loginData:CredentialsDto):Promise<number> => {
+  const verifyLoginData = await credentialEntity.findOne({
+    where:{userName:loginData.userName, password:loginData.password}
+  });
 
-  if (credentialsWanted === undefined) return undefined;
-
-  if (credentialsWanted.password === password) {
-    console.log("Usuario y Contraseña correctos, el id de las credenciales es", credentialsWanted.id);
-    return credentialsWanted.id;
-  }
-  else return undefined;
+  if (verifyLoginData) return verifyLoginData.id;
+  else throw new httpError ("Inicio de sesión fallido, no coinciden Usuario y Contraseña", 400);
 };

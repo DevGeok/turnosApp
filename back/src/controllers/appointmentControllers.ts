@@ -1,13 +1,15 @@
 import { Request, Response } from "express";
 import { cancelAppointmentService, createAppointmentService, getAppointmentsByIdService, getAppointmentsService } from "../services/appointmentServices";
+import catchAsync from "../utils/catshAsync";
 
-export const getAppointments = async (req:Request , res:Response) => {
-  res.status(201).json(await getAppointmentsService());
-};
+export const getAppointments = catchAsync(async (req:Request , res:Response) => {
+  res.status(200).json(await getAppointmentsService());
+});
 
-export const getAppointmentsById = async (req:Request , res:Response) => {
-  res.status(201).json(await getAppointmentsByIdService(req.body.id));
-};
+export const getAppointmentsById = catchAsync(async (req:Request , res:Response) => {
+  const appointmentId: number = parseInt(req.params.id);
+  res.status(200).json(await getAppointmentsByIdService(appointmentId));
+});
 
 export const createAppointment = async (req:Request , res:Response) => {
   try {
@@ -19,7 +21,10 @@ export const createAppointment = async (req:Request , res:Response) => {
 
 };
 
-export const cancelAppointment = async (req:Request , res:Response) => {
-  await cancelAppointmentService(req.body.id);
+export const cancelAppointment = catchAsync (async (req:Request , res:Response) => {
+  const appointmentId: number = parseInt(req.params.id);
+  await cancelAppointmentService(appointmentId);
   res.status(201).json({message:"La cita ha sido cancelada"});
-};
+});
+
+
